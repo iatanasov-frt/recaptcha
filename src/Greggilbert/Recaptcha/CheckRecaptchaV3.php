@@ -5,7 +5,7 @@ namespace Greggilbert\Recaptcha;
 /**
  * Handle sending out and receiving a response to validate the captcha
  */
-class CheckRecaptchaV2 implements RecaptchaInterface
+class CheckRecaptchaV3 implements RecaptchaInterface
 {
 
 	/**
@@ -48,12 +48,24 @@ class CheckRecaptchaV2 implements RecaptchaInterface
         }
 
         $decodedResponse = json_decode($checkResponse, true);
-		return $decodedResponse['success'];
+
+        if (!$decodedResponse['success']) {
+            return false;
+        }
+
+        if (isset($params[0])) {
+            $targetLevel = floatval($params[0]);
+            if ($decodedResponse['score'] < $targetLevel) {
+                return false;
+            }
+        }
+
+        return true;
 	}
 
     public function getTemplate()
     {
-        return 'captchav2';
+        return 'captchav3';
     }
 
     public function getResponseKey()

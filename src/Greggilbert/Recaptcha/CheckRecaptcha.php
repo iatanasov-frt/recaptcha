@@ -11,14 +11,15 @@ class CheckRecaptcha implements RecaptchaInterface
     const SERVER_SECURE	= 'https://www.google.com/recaptcha/api';
 	const ENDPOINT		= '/recaptcha/api/verify';
     const VERIFY_SERVER	= 'www.google.com';
-	
+
 	/**
 	 * Call out to reCAPTCHA and process the response
 	 * @param string $challenge
 	 * @param string $response
+	 * @param array $params
 	 * @return bool
 	 */
-	public function check($challenge, $response)
+	public function check($challenge, $response, $params)
 	{
 		$parameters = http_build_query(array(
 			'privatekey'	=> app('config')->get('recaptcha::private_key'),
@@ -36,7 +37,7 @@ class CheckRecaptcha implements RecaptchaInterface
 		$http_request .= $parameters;
 
 		$apiResponse = '';
-		
+
 		if (false == ($fs = @fsockopen(self::VERIFY_SERVER, 80)))
 		{
 			throw new \Exception('Could not open socket');
@@ -48,21 +49,21 @@ class CheckRecaptcha implements RecaptchaInterface
 		{
 			$apiResponse .= fgets($fs, 1160); // One TCP-IP packet
 		}
-		
+
 		fclose($fs);
-		
+
 		$apiResponse = explode("\r\n\r\n", $apiResponse, 2);
 
         list($passed, $responseText) = explode("\n", $apiResponse[1]);
 
         return ('true' === trim($passed));
 	}
-    
+
     public function getTemplate()
     {
         return 'captcha';
     }
-    
+
     public function getResponseKey()
     {
         return 'recaptcha_challenge_field';
